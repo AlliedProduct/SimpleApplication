@@ -13,11 +13,12 @@
     "ejs": "~2.6.1",
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
-    "mocha": "^9.2.0",
     "mocha-circleci-reporter": "0.0.3",
     "morgan": "~1.9.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "mocha": "^11.7.5",
+    "nodemon": "^2.0.7",
+    "supertest": "^7.2.2"
   }
 }
