@@ -1,4 +1,4 @@
-name: ci_cd
+name: ci-cd
 
 on:
   push:
@@ -24,3 +24,45 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Package application
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: tar --exclude='.git' --exclude='node_modules' -czf simple-application.tar.gz .
+
+      - name: Upload build artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple-application
+          path: simple-application.tar.gz
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: simple-application
+
+      - name: Configure SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy release to EC2
+        run: scp simple-application.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/tmp/simple-application.tar.gz
+
+      - name: Deploy on EC2
+        run: ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' < scripts/deploy.sh
+
+      - name: Validate deploy
+        run: ssh ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' < scripts/validate.sh
