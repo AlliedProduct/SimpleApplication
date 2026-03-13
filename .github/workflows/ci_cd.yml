@@ -27,7 +27,13 @@ jobs:
 
       - name: Package application
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: tar --warning=no-file-changed --exclude='.git' --exclude='node_modules' --exclude='simple-application.tar.gz' -czf simple-application.tar.gz .
+        run: |
+            mkdir -p /tmp/simple-application-build
+            rsync -a . /tmp/simple-application-build/ \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='simple-application.tar.gz'
+            tar -czf simple-application.tar.gz -C /tmp/simple-application-build .
 
       - name: Upload build artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
