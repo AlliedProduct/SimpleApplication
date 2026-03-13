@@ -6,12 +6,13 @@ RELEASE_DIR="$APP_DIR/current"
 ARTIFACT="/tmp/simple-application.tar.gz"
 
 sudo mkdir -p "$APP_DIR"
-sudo rm -rf "$RELEASE_DIR"
-sudo mkdir -p "$RELEASE_DIR"
-sudo tar -xzf "$ARTIFACT" -C "$RELEASE_DIR"
+sudo chown -R "$USER":"$USER" "$APP_DIR"
+
+rm -rf "$RELEASE_DIR"
+mkdir -p "$RELEASE_DIR"
+tar -xzf "$ARTIFACT" -C "$RELEASE_DIR"
 
 cd "$RELEASE_DIR"
-
 npm ci --omit=dev
 
 pm2 delete simple-application || true
